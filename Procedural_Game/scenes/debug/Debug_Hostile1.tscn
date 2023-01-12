@@ -1,0 +1,40 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://scenes/hostile/Hostile.tscn" type="PackedScene" id=1]
+[ext_resource path="res://assets/shaders/general/BaseShader.tres" type="Material" id=2]
+
+[node name="Debug_Hostile1" type="Spatial"]
+
+[node name="Hostile" parent="." instance=ExtResource( 1 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.51036, 0 )
+LegCount = 66
+
+[node name="CSGCombiner" type="CSGCombiner" parent="."]
+use_collision = true
+collision_layer = 17
+collision_mask = 17
+
+[node name="CSGBox" type="CSGBox" parent="CSGCombiner"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00839877, -0.103602, 0.0409098 )
+width = 16.9939
+height = 0.207295
+depth = 15.6832
+material = ExtResource( 2 )
+
+[node name="CSGSphere2" type="CSGBox" parent="CSGCombiner"]
+transform = Transform( 0.553799, 0.832651, 0, -0.832651, 0.553799, 0, 0, 0, 1, 6.64205, -0.178719, 0 )
+width = 3.29833
+height = 9.53067
+depth = 13.2204
+
+[node name="Camera" type="Camera" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.982868, 0.184312, 0, -0.184312, 0.982868, 0, 3.147, 9.614 )
+current = true
+fov = 52.9
+
+[node name="SpotLight" type="SpotLight" parent="."]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 5.76531, -0.184116 )
+light_color = Color( 0.345098, 0.345098, 0.345098, 1 )
+shadow_enabled = true
+spot_range = 9.40759
+spot_angle = 68.9063

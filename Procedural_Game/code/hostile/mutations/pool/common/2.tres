@@ -1,0 +1,11 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://code/hostile/mutations/BaseMutation.gd" type="Script" id=1]
+
+[resource]
+script = ExtResource( 1 )
+Name = "Hanged"
+PoolType = 0
+Effects = {
+"rotation": Vector3( 180, 0, 0 )
+}

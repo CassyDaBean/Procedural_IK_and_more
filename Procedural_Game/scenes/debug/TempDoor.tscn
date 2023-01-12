@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=2]
+
+[sub_resource type="BoxShape" id=1]
+extents = Vector3( 1, 1, 0.268 )
+
+[sub_resource type="CubeMesh" id=2]
+
+[node name="TempDoor" type="KinematicBody" groups=["Door"]]
+collision_layer = 256
+collision_mask = 256
+
+[node name="CollisionShape" type="CollisionShape" parent="."]
+transform = Transform( 2, 0, 0, 0, 2, 0, 0, 0, 1, 0, 2, 0 )
+shape = SubResource( 1 )
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( 2, 0, 0, 0, 2, 0, 0, 0, 0.266, 0, 2, 0 )
+mesh = SubResource( 2 )
+material/0 = null

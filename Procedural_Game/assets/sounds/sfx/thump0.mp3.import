@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/thump0.mp3-d4f44c7cdb2b4fa11a495c29b7db7d9a.mp3str"
+
+[deps]
+
+source_file="res://assets/sounds/sfx/thump0.mp3"
+dest_files=[ "res://.import/thump0.mp3-d4f44c7cdb2b4fa11a495c29b7db7d9a.mp3str" ]
+
+[params]
+
+loop=false
+loop_offset=0

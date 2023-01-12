@@ -1,0 +1,224 @@
+[gd_resource type="ShaderMaterial" load_steps=20 format=2]
+
+[sub_resource type="VisualShaderNodeTextureUniformTriplanar" id=20]
+uniform_name = "Base_color"
+texture_type = 1
+
+[sub_resource type="VisualShaderNodeTextureUniformTriplanar" id=21]
+uniform_name = "Metallic"
+texture_type = 1
+color_default = 1
+
+[sub_resource type="VisualShaderNodeTextureUniformTriplanar" id=22]
+uniform_name = "Roughness"
+texture_type = 1
+
+[sub_resource type="VisualShaderNodeTextureUniformTriplanar" id=23]
+uniform_name = "Emission"
+texture_type = 1
+color_default = 1
+
+[sub_resource type="VisualShaderNodeInput" id=5]
+input_name = "albedo"
+
+[sub_resource type="VisualShaderNodeVectorOp" id=6]
+operator = 2
+
+[sub_resource type="OpenSimplexNoise" id=7]
+octaves = 9
+period = 13.2
+persistence = 0.569
+lacunarity = 2.32
+
+[sub_resource type="NoiseTexture" id=8]
+seamless = true
+noise = SubResource( 7 )
+
+[sub_resource type="VisualShaderNodeTexture" id=9]
+texture = SubResource( 8 )
+texture_type = 1
+
+[sub_resource type="VisualShaderNodeVectorOp" id=10]
+operator = 2
+
+[sub_resource type="VisualShaderNodeInput" id=11]
+input_name = "view"
+
+[sub_resource type="VisualShaderNodeInput" id=12]
+input_name = "light"
+
+[sub_resource type="VisualShaderNodeInput" id=13]
+input_name = "diffuse"
+
+[sub_resource type="VisualShaderNodeInput" id=14]
+input_name = "albedo"
+
+[sub_resource type="VisualShaderNodeInput" id=15]
+input_name = "attenuation"
+
+[sub_resource type="VisualShaderNodeVectorFunc" id=16]
+
+[sub_resource type="VisualShaderNodeVectorOp" id=17]
+operator = 2
+
+[sub_resource type="VisualShaderNodeInput" id=18]
+input_name = "light_color"
+
+[sub_resource type="VisualShader" id=19]
+code = "shader_type spatial;
+render_mode cull_disabled, specular_schlick_ggx, async_visible, ambient_light_disabled;
+
+uniform sampler2D Base_color : hint_albedo;
+uniform sampler2D Metallic : hint_black_albedo;
+uniform sampler2D Roughness : hint_albedo;
+uniform sampler2D Emission : hint_black_albedo;
+uniform sampler2D tex_lgt_13 : hint_albedo;
+
+
+// TRIPLANAR FUNCTION GLOBAL CODE
+	vec4 triplanar_texture(sampler2D p_sampler, vec3 p_weights, vec3 p_triplanar_pos) {
+		vec4 samp = vec4(0.0);
+		samp += texture(p_sampler, p_triplanar_pos.xy) * p_weights.z;
+		samp += texture(p_sampler, p_triplanar_pos.xz) * p_weights.y;
+		samp += texture(p_sampler, p_triplanar_pos.zy * vec2(-1.0, 1.0)) * p_weights.x;
+		return samp;
+	}
+
+	uniform vec3 triplanar_scale = vec3(1.0, 1.0, 1.0);
+	uniform vec3 triplanar_offset;
+	uniform float triplanar_sharpness = 0.5;
+
+	varying vec3 triplanar_power_normal;
+	varying vec3 triplanar_pos;
+
+void vertex() {
+// Output:0
+
+	// TRIPLANAR FUNCTION VERTEX CODE
+		triplanar_power_normal = pow(abs(NORMAL), vec3(triplanar_sharpness));
+		triplanar_power_normal /= dot(triplanar_power_normal, vec3(1.0));
+		triplanar_pos = VERTEX * triplanar_scale + triplanar_offset;
+		triplanar_pos *= vec3(1.0, -1.0, 1.0);
+}
+
+void fragment() {
+// TextureUniformTriplanar:6
+	vec3 n_out6p0;
+	float n_out6p1;
+	{
+		vec4 n_tex_read = triplanar_texture( Base_color, triplanar_power_normal, triplanar_pos );
+		n_out6p0 = n_tex_read.rgb;
+		n_out6p1 = n_tex_read.a;
+	}
+
+// TextureUniformTriplanar:7
+	vec3 n_out7p0;
+	float n_out7p1;
+	{
+		vec4 n_tex_read = triplanar_texture( Metallic, triplanar_power_normal, triplanar_pos );
+		n_out7p0 = n_tex_read.rgb;
+		n_out7p1 = n_tex_read.a;
+	}
+
+// TextureUniformTriplanar:8
+	vec3 n_out8p0;
+	float n_out8p1;
+	{
+		vec4 n_tex_read = triplanar_texture( Roughness, triplanar_power_normal, triplanar_pos );
+		n_out8p0 = n_tex_read.rgb;
+		n_out8p1 = n_tex_read.a;
+	}
+
+// TextureUniformTriplanar:9
+	vec3 n_out9p0;
+	float n_out9p1;
+	{
+		vec4 n_tex_read = triplanar_texture( Emission, triplanar_power_normal, triplanar_pos );
+		n_out9p0 = n_tex_read.rgb;
+		n_out9p1 = n_tex_read.a;
+	}
+
+// Output:0
+	ALBEDO = n_out6p0;
+	METALLIC = dot(n_out7p0, vec3(0.333333, 0.333333, 0.333333));
+	ROUGHNESS = dot(n_out8p0, vec3(0.333333, 0.333333, 0.333333));
+	EMISSION = n_out9p0;
+
+}
+
+void light() {
+// Input:6
+	vec3 n_out6p0 = ATTENUATION;
+
+// VectorFunc:7
+	vec3 n_out7p0 = normalize(n_out6p0);
+
+// Texture:13
+	vec4 tex_lgt_13_read = texture(tex_lgt_13, UV.xy);
+	vec3 n_out13p0 = tex_lgt_13_read.rgb;
+	float n_out13p1 = tex_lgt_13_read.a;
+
+// VectorOp:14
+	vec3 n_out14p0 = n_out7p0 * n_out13p0;
+
+// Input:9
+	vec3 n_out9p0 = LIGHT_COLOR;
+
+// VectorOp:8
+	vec3 n_out8p0 = n_out14p0 * n_out9p0;
+
+// Input:11
+	vec3 n_out11p0 = ALBEDO;
+
+// VectorOp:12
+	vec3 n_out12p0 = n_out8p0 * n_out11p0;
+
+// Output:0
+	DIFFUSE_LIGHT = n_out12p0;
+
+}
+"
+graph_offset = Vector2( -690.104, 141.43 )
+modes/cull = 2
+flags/ambient_light_disabled = true
+nodes/fragment/6/node = SubResource( 20 )
+nodes/fragment/6/position = Vector2( -360, 80 )
+nodes/fragment/7/node = SubResource( 21 )
+nodes/fragment/7/position = Vector2( -360, 260 )
+nodes/fragment/8/node = SubResource( 22 )
+nodes/fragment/8/position = Vector2( -120, 380 )
+nodes/fragment/9/node = SubResource( 23 )
+nodes/fragment/9/position = Vector2( 120, 380 )
+nodes/fragment/connections = PoolIntArray( 6, 0, 0, 0, 7, 0, 0, 2, 8, 0, 0, 3, 9, 0, 0, 5 )
+nodes/light/0/position = Vector2( 760, -20 )
+nodes/light/2/node = SubResource( 11 )
+nodes/light/2/position = Vector2( -140, 160 )
+nodes/light/3/node = SubResource( 12 )
+nodes/light/3/position = Vector2( -140, 100 )
+nodes/light/4/node = SubResource( 13 )
+nodes/light/4/position = Vector2( -140, 40 )
+nodes/light/5/node = SubResource( 14 )
+nodes/light/5/position = Vector2( -140, -20 )
+nodes/light/6/node = SubResource( 15 )
+nodes/light/6/position = Vector2( -300, 240 )
+nodes/light/7/node = SubResource( 16 )
+nodes/light/7/position = Vector2( -140, 240 )
+nodes/light/8/node = SubResource( 17 )
+nodes/light/8/position = Vector2( 80, 60 )
+nodes/light/9/node = SubResource( 18 )
+nodes/light/9/position = Vector2( 20, -80 )
+nodes/light/11/node = SubResource( 5 )
+nodes/light/11/position = Vector2( 200, 160 )
+nodes/light/12/node = SubResource( 6 )
+nodes/light/12/position = Vector2( 380, 40 )
+nodes/light/13/node = SubResource( 9 )
+nodes/light/13/position = Vector2( -80, 300 )
+nodes/light/14/node = SubResource( 10 )
+nodes/light/14/position = Vector2( 100, 240 )
+nodes/light/connections = PoolIntArray( 6, 0, 7, 0, 9, 0, 8, 1, 11, 0, 12, 1, 8, 0, 12, 0, 12, 0, 0, 0, 7, 0, 14, 0, 13, 0, 14, 1, 14, 0, 8, 0 )
+
+[resource]
+shader = SubResource( 19 )
+shader_param/triplanar_scale = Vector3( 1, 1, 1 )
+shader_param/triplanar_offset = null
+shader_param/triplanar_sharpness = 0.5
